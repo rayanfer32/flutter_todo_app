@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_todo/screens/taskpage.dart';
 import '../widgets.dart';
+import '../database_helper.dart';
 
 class Homepage extends StatefulWidget {
   @override
@@ -9,6 +10,8 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
+  DatabaseHelper _dbHelper = DatabaseHelper();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,24 +27,55 @@ class _HomepageState extends State<Homepage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                      margin: EdgeInsets.only(
-                        top: 24,
-                        bottom: 32,
+                  Row(
+                    children: [
+                      Container(
+                        margin: EdgeInsets.only(
+                          top: 24,
+                          bottom: 32,
+                        ),
+                        child: Image.asset('assets/ui/go_grocery_logo.png',
+                            width: 64, height: 64),
                       ),
-                      child: Image.asset('assets/ui/go_grocery_logo.png',
-                          width: 64, height: 64)),
+                      Text(
+                        "Grocer Note.",
+                        style: TextStyle(
+                            color: Color(0xff213551),
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,),
+                      )
+                    ],
+                  ),
                   Expanded(
-                    child: ListView(
-                      children: [
-                        TaskCardWidget(title: "Get Started Now!"),
-                        TaskCardWidget(),
-                        TaskCardWidget(),
-                        TaskCardWidget(),
-                        TaskCardWidget(),
-                      ],
-                    ),
-                  )
+                    child: FutureBuilder(
+                        initialData: [],
+                        future: _dbHelper.getTasks(),
+                        builder: (context, snapshot) {
+                          return ListView.builder(
+                            itemCount: snapshot.data.length,
+                            itemBuilder: (context, index) {
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => TaskPage(
+                                                task: snapshot.data[index],
+                                              ))).then(
+                                    (value) {
+                                      setState(() {});
+                                    },
+                                  );
+                                },
+                                child: TaskCardWidget(
+                                  title: snapshot.data[index].title,
+                                  desc: snapshot.data[index].description,
+                                ),
+                              );
+                            },
+                          );
+                        }),
+                  ),
                 ],
               ),
               Positioned(
@@ -49,13 +83,22 @@ class _HomepageState extends State<Homepage> {
                 right: 0,
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => TaskPage()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => TaskPage(task: null)),
+                    ).then((value) {
+                      setState(() {});
+                    });
                   },
                   child: Container(
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.blueAccent, Colors.blue],
+                            begin: Alignment(0, -1),
+                          ),
                           color: Colors.blueAccent,
                           borderRadius: BorderRadius.circular(20)),
                       child: Container(

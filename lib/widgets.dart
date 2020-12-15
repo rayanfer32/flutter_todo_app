@@ -71,15 +71,33 @@ class TodoWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            Text(
-              text ?? "{Unnamed Todo}",
-              style: TextStyle(
-                color: isDone ? Colors.deepPurple: Colors.black26,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+            Flexible(
+              child: Text(
+                text ?? "{Unnamed Todo}",
+                style: TextStyle(
+                  color: isDone ? Colors.deepPurple : Colors.black26,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
         ));
+  }
+}
+
+class suggestionsBar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(child: Text("Sugestions bar.."));
+  }
+}
+
+
+class NoGlowBehavior extends ScrollBehavior {
+  @override
+  Widget buildViewportChrome(
+      BuildContext context, Widget child, AxisDirection axisDirection) {
+    return child;
   }
 }
