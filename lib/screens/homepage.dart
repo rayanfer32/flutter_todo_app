@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_todo/screens/taskpage.dart';
 import '../widgets.dart';
 import '../database_helper.dart';
+import 'package:provider/provider.dart';
+import '../models/task.dart';
 
 class Homepage extends StatefulWidget {
   @override
@@ -47,11 +49,14 @@ class _HomepageState extends State<Homepage> {
                     ],
                   ),
                   Expanded(
-                    child: FutureBuilder(
+                    child: Consumer<DatabaseHelper>(
+                      builder: (context, tasks, child) => FutureBuilder(
                         initialData: [],
                         future: _dbHelper.getTasks(),
                         builder: (context, snapshot) {
-                          return ListView.builder(
+                          return ScrollConfiguration(
+                              behavior: NoGlowBehavior(),
+                            child: ListView.builder(
                             itemCount: snapshot.data.length,
                             itemBuilder: (context, index) {
                               return GestureDetector(
@@ -68,13 +73,16 @@ class _HomepageState extends State<Homepage> {
                                   );
                                 },
                                 child: TaskCardWidget(
+                                  id: snapshot.data[index].id,
                                   title: snapshot.data[index].title,
                                   desc: snapshot.data[index].description,
                                 ),
                               );
                             },
+                          ),
                           );
                         }),
+                  ),
                   ),
                 ],
               ),

@@ -1,10 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'database_helper.dart';
+
+
+class NoGlowBehavior extends ScrollBehavior {
+  @override
+  Widget buildViewportChrome(
+      BuildContext context, Widget child, AxisDirection axisDirection) {
+    return child;
+  }
+}
 
 class TaskCardWidget extends StatelessWidget {
+  final int id;
   final String title;
   final String desc;
 
-  TaskCardWidget({this.title, this.desc});
+  TaskCardWidget({this.id ,this.title, this.desc});
 
   @override
   Widget build(BuildContext context) {
@@ -35,69 +47,109 @@ class TaskCardWidget extends StatelessWidget {
                 ),
               ),
             ]),
+            Positioned(
+              right:0,
+              child: IconButton(icon: Icon(Icons.delete_forever,color: Colors.pink[500],size: 32,),
+                onPressed: (){
+                Provider.of<DatabaseHelper>(context, listen: false).deleteTask(id);
+                }
+            ),
+            ),
           ],
         ));
   }
 }
 
-class TodoWidget extends StatelessWidget {
+class TodoWidget extends StatelessWidget{
+  final int id;
   final String text;
   final bool isDone;
+  final textController = TextEditingController();
 
-  TodoWidget({this.text, @required this.isDone});
+  TodoWidget({this.id, this.text, @required this.isDone});
 
   @override
   Widget build(BuildContext context) {
+
     return Container(
         padding: EdgeInsets.symmetric(
-          horizontal: 24,
-          vertical: 8,
+          horizontal: 16,
+          vertical: 0,
         ),
         child: Row(
           children: [
-            Container(
-              width: 24,
-              height: 24,
-              margin: EdgeInsets.only(
-                right: 12,
-              ),
-              child: isDone
-                  ? Icon(Icons.check_box_rounded,
-                      color: Colors.deepPurpleAccent)
-                  : Icon(Icons.check_box_outline_blank_rounded,
-                      color: Colors.black26),
-              decoration: BoxDecoration(
-                // color: Color(0xFF7349FE),
-                borderRadius: BorderRadius.circular(10),
+            GestureDetector(
+              onTap: () async{
+                if(isDone) {
+                  Provider.of<DatabaseHelper>(context, listen: false)
+                      .updateTodoDone(id, 0);
+                }
+                else{
+                  Provider.of<DatabaseHelper>(context, listen: false)
+                      .updateTodoDone(id, 1);
+                }
+              },
+              child: Container(
+                width: 24,
+                height: 24,
+                margin: EdgeInsets.only(
+                  right: 8,
+                ),
+                child: isDone
+                    ? Icon(Icons.check_box_rounded,
+                        color: Colors.deepPurpleAccent)
+                    : Icon(Icons.check_box_outline_blank_rounded,
+                        color: Colors.black26),
+                decoration: BoxDecoration(
+                  // color: Color(0xFF7349FE),
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
             Flexible(
-              child: Text(
-                text ?? "{Unnamed Todo}",
+              child: TextField(
+                onChanged: (value){
+                  // print(value);
+                  print(textController.text);
+                  Provider.of<DatabaseHelper>(context,listen: false).updateTodoText(this.id, textController.text);
+                  // textController.selection = TextSelection.fromPosition(TextPosition(offset: textController.text.length));
+                },
+                  // focusNode: textFocusNode,
+                controller: textController..text = text ?? "{Blank Todo}",
                 style: TextStyle(
-                  color: isDone ? Colors.deepPurple : Colors.black26,
+                  color: isDone ? Colors.deepPurple : Colors.black54,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
+                  decoration: InputDecoration(
+                      hintText: "Item...",
+                      border: InputBorder.none,
+                  )
               ),
+            ),
+            Container(
+              child: IconButton(icon: Icon(Icons.delete_forever),onPressed:(){
+                print("delete todo");
+                Provider.of<DatabaseHelper>(context,listen: false).deleteTodo(this.id);
+              }),
             ),
           ],
         ));
   }
-}
 
-class suggestionsBar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(child: Text("Sugestions bar.."));
-  }
 }
 
 
-class NoGlowBehavior extends ScrollBehavior {
-  @override
-  Widget buildViewportChrome(
-      BuildContext context, Widget child, AxisDirection axisDirection) {
-    return child;
-  }
-}
+
+// class SuggestionsBar extends StatelessWidget {
+//   String userInput;
+//   SuggestionsBar(String userInput);
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(child: Text(userInput ?? "Type Something ..."));
+//   }
+// }
+//
+
+
+

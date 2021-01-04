@@ -1,4 +1,6 @@
-class Task {
+import 'package:provider/provider.dart';
+
+class Task{
   final int id;
   final String title;
   final String description;
