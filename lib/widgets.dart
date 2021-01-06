@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'database_helper.dart';
-
+import 'suggestions_provider.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_svg/flutter_svg.dart';
 
 class NoGlowBehavior extends ScrollBehavior {
   @override
@@ -16,7 +18,7 @@ class TaskCardWidget extends StatelessWidget {
   final String title;
   final String desc;
 
-  TaskCardWidget({this.id ,this.title, this.desc});
+  TaskCardWidget({this.id, this.title, this.desc});
 
   @override
   Widget build(BuildContext context) {
@@ -48,19 +50,24 @@ class TaskCardWidget extends StatelessWidget {
               ),
             ]),
             Positioned(
-              right:0,
-              child: IconButton(icon: Icon(Icons.delete_forever,color: Colors.pink[500],size: 32,),
-                onPressed: (){
-                Provider.of<DatabaseHelper>(context, listen: false).deleteTask(id);
-                }
-            ),
+              right: 0,
+              child: IconButton(
+                  icon: Icon(
+                    Icons.delete_forever,
+                    color: Colors.pink[500],
+                    size: 32,
+                  ),
+                  onPressed: () {
+                    Provider.of<DatabaseHelper>(context, listen: false)
+                        .deleteTask(id);
+                  }),
             ),
           ],
         ));
   }
 }
 
-class TodoWidget extends StatelessWidget{
+class TodoWidget extends StatelessWidget {
   final int id;
   final String text;
   final bool isDone;
@@ -70,7 +77,6 @@ class TodoWidget extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
         padding: EdgeInsets.symmetric(
           horizontal: 16,
@@ -79,12 +85,11 @@ class TodoWidget extends StatelessWidget{
         child: Row(
           children: [
             GestureDetector(
-              onTap: () async{
-                if(isDone) {
+              onTap: () async {
+                if (isDone) {
                   Provider.of<DatabaseHelper>(context, listen: false)
                       .updateTodoDone(id, 0);
-                }
-                else{
+                } else {
                   Provider.of<DatabaseHelper>(context, listen: false)
                       .updateTodoDone(id, 1);
                 }
@@ -108,48 +113,92 @@ class TodoWidget extends StatelessWidget{
             ),
             Flexible(
               child: TextField(
-                onChanged: (value){
-                  // print(value);
-                  print(textController.text);
-                  Provider.of<DatabaseHelper>(context,listen: false).updateTodoText(this.id, textController.text);
-                  // textController.selection = TextSelection.fromPosition(TextPosition(offset: textController.text.length));
-                },
+                  onChanged: (value) {
+                    // print(value);
+                    print(textController.text);
+                    Provider.of<DatabaseHelper>(context, listen: false)
+                        .updateTodoText(this.id, textController.text);
+                    // textController.selection = TextSelection.fromPosition(TextPosition(offset: textController.text.length));
+                  },
                   // focusNode: textFocusNode,
-                controller: textController..text = text ?? "{Blank Todo}",
-                style: TextStyle(
-                  color: isDone ? Colors.deepPurple : Colors.black54,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                  controller: textController..text = text ?? "{Blank Todo}",
+                  style: TextStyle(
+                    color: isDone ? Colors.deepPurple : Colors.black54,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                   decoration: InputDecoration(
-                      hintText: "Item...",
-                      border: InputBorder.none,
-                  )
-              ),
+                    hintText: "Item...",
+                    border: InputBorder.none,
+                  )),
             ),
             Container(
-              child: IconButton(icon: Icon(Icons.delete_forever),onPressed:(){
-                print("delete todo");
-                Provider.of<DatabaseHelper>(context,listen: false).deleteTodo(this.id);
-              }),
+              child: IconButton(
+                  icon: Icon(Icons.close_rounded, color: Colors.pink),
+                  onPressed: () {
+                    print("delete todo");
+                    Provider.of<DatabaseHelper>(context, listen: false)
+                        .deleteTodo(this.id);
+                  }),
             ),
           ],
         ));
   }
-
 }
 
+class SuggestionsWidget extends StatelessWidget {
+  final TextEditingController input;
+  final List suggestion;
 
+  SuggestionsWidget({this.input,this.suggestion});
 
-// class SuggestionsBar extends StatelessWidget {
-//   String userInput;
-//   SuggestionsBar(String userInput);
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(child: Text(userInput ?? "Type Something ..."));
-//   }
-// }
-//
+  @override
+  Widget build(BuildContext context) {
+    return Visibility(
+      visible: ((input.text != "") && (suggestion.length != 0)) ? true : false,
+      child: Container(
+        width: double.infinity,
+        height: 100,
+        // padding: EdgeInsets.all(1),
+        decoration: BoxDecoration(
+            color: Colors.pink[100], borderRadius: BorderRadius.circular(12)),
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: suggestion.length,
+          itemBuilder: (context, index) {
+            var iconPath;
+            if(suggestion[index]['iconPath'] != null){
+              iconPath = suggestion[index]['iconPath'];
+             }
+            else{
+              iconPath = 'assets/svg/bowl.svg';
+            }
 
-
-
+            return Container(
+              width: 88,
+              child: GestureDetector(
+                onTap: (){
+                  String name = suggestion[index]['name'].trim();
+                  print(name);
+                  input..text = name;
+                  input.selection = TextSelection.fromPosition(TextPosition(offset: input.text.length));
+                  // Provider.of<DatabaseHelper>(context, listen: false).insertTodo(_newTodo);
+                },
+                child: Card(
+                  child: GridTile(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: SvgPicture.asset(iconPath),
+                    ),
+                    footer: Center(child: Text(suggestion[index]['name'].trim())),
+                    // footer: Text(suggestion[index]['brand'] ?? ""),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}

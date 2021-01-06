@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'database_helper.dart';
 import 'screens/homepage.dart';
+import 'package:flutter_todo/suggestions_provider.dart';
 
 void main() {
   runApp(MyApp());
@@ -13,11 +14,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
         create: (context) => DatabaseHelper(),
-        child: MaterialApp(
-        theme: ThemeData(
-            textTheme:
-                GoogleFonts.nunitoSansTextTheme(Theme.of(context).textTheme)),
-        home: Homepage())
+        child: ChangeNotifierProvider(
+          create: (context) => SuggestionsProvider(),
+          child: MaterialApp(
+          theme: ThemeData(
+              textTheme:
+              GoogleFonts.nunitoSansTextTheme(Theme.of(context).textTheme)),
+          home: Homepage())
+        )
+
     );
   }
 }

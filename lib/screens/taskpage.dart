@@ -6,59 +6,12 @@ import 'package:provider/provider.dart';
 import '../database_helper.dart';
 import '../models/task.dart';
 import '../models/todo.dart';
+import 'package:flutter_todo/suggestions_provider.dart';
 
-import 'package:flutter_typeahead/flutter_typeahead.dart';
+// import 'package:flutter_typeahead/flutter_typeahead.dart';
 
-import 'dart:convert';
 
-List allProducts;
 
-class SuggestionLoader extends SearchDelegate<String> {
-  var recentQuery = [];
-
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: Icon(Icons.clear),
-        onPressed: () {
-          query = "";
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    return IconButton(
-        icon: AnimatedIcon(
-          icon: AnimatedIcons.menu_arrow,
-          progress: transitionAnimation,
-        ),
-        onPressed: () {
-          close(context, null);
-        });
-  }
-
-  @override
-  Widget buildResults(BuildContext context) { }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    if (allProducts == null) {
-      return Text("failed");
-    }
-
-    final suggestionList = query.isEmpty ? recentQuery : allProducts;
-    return ListView.builder(
-      itemBuilder: (context, index) => ListTile(
-        leading: Icon(Icons.eco),
-        title: Text(suggestionList[index].name),
-      ),
-      itemCount: allProducts.length,
-    );
-  }
-}
 
 class TaskPage extends StatefulWidget {
   final Task task;
@@ -69,7 +22,6 @@ class TaskPage extends StatefulWidget {
   _TaskPageState createState() => _TaskPageState();
 }
 
-// var _userInput = "";
 
 class _TaskPageState extends State<TaskPage> {
   DatabaseHelper _dbHelper = DatabaseHelper();
@@ -89,31 +41,6 @@ class _TaskPageState extends State<TaskPage> {
   final enterTaskDescriptionController = TextEditingController();
 
 
-  String _userInput = "";
-
-  List loadToList(data) {
-    allProducts = data;
-  }
-
-  Future<List<dynamic>> retrieveSuggestions() async {
-    final json =
-        DefaultAssetBundle.of(context).loadString('assets/products.json');
-    final decoder = JsonDecoder();
-    final data = decoder.convert(await json);
-
-    return loadToList(data);
-
-    // dynamic i;
-    // int counter = 0;
-    // for (i in data) {
-    //   print(i);
-    //   if (counter == 10) {
-    //     break;
-    //   } else {
-    //     counter += 1;
-    //   }
-    // }
-  }
 
   @override
   void initState() {
@@ -139,7 +66,7 @@ class _TaskPageState extends State<TaskPage> {
     else{
       enterTaskDescriptionController.text = _taskDescription;
     }
-    retrieveSuggestions();
+    // retrieveSuggestions();
 
     super.initState();
   }
@@ -272,6 +199,14 @@ class _TaskPageState extends State<TaskPage> {
                           }),
                     ),
                   ),
+
+                  Visibility(
+                    visible: _contentVisible,
+                    child: Consumer<SuggestionsProvider>(
+                      builder: (context, searchInstance, child) =>
+                      SuggestionsWidget(input: enterTodoItemController,suggestion: searchInstance.suggestion),),
+                  ),
+
                   Visibility(
                     visible: _contentVisible,
                     child: Padding(
@@ -321,6 +256,9 @@ class _TaskPageState extends State<TaskPage> {
                               //     _userInput = value;
                               //   });
                               // },
+                              onChanged: (value){
+                                Provider.of<SuggestionsProvider>(context, listen: false).getSuggestions(value);
+                              },
                               onSubmitted: (value) async {
                                 // Check if field is not empty
                                   if (value != "") {
@@ -335,7 +273,7 @@ class _TaskPageState extends State<TaskPage> {
                                     await _dbHelper.insertTodo(_newTodo);
 
                                     print("Todo has been added");
-                                    _userInput = "";
+                                    enterTodoItemController..text = "";
                                     setState(() {});
 
                                     _todoFocus.requestFocus();
@@ -413,30 +351,3 @@ class _TaskPageState extends State<TaskPage> {
 
 }
 
-class StateService {
-
-  static getSuggestions(String pattern) {
-    List<Map<String, dynamic>> separatedMatches = List();
-
-    if(allProducts != null) {
-      print(pattern);
-      List matches = List();
-      matches.addAll(allProducts);
-      matches.retainWhere((item) =>
-          item['name'].toLowerCase().contains(pattern.toLowerCase()));
-      // print(matches);
-      for(var match in matches) {
-        if (match['name'].contains('|')) {
-          List names = match['name'].split('|');
-          for(var name in names){
-            separatedMatches.add({'name': name,'brand':match['brand']});
-          }
-        }
-        else{
-          separatedMatches.add(match);
-        }
-      }
-      return separatedMatches;
-    }
-  }
-}
